@@ -8,6 +8,7 @@ import os
 
 app = FastAPI()
 
+# CORS Fix
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -15,20 +16,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# RAM bachane ke liye lighter model (u2netp) use karenge
-# 'u2netp' is small and fast for free servers
-session = new_session("u2netp") 
+# Global session variable
+session = None
 
 @app.get("/")
 async def root():
-    return {"status": "online"}
+    return {"status": "online", "info": "AI Background Remover is Ready"}
 
 @app.post("/remove-bg")
 async def remove_background(file: UploadFile = File(...)):
+    global session
     try:
+        # Jab pehli image aaye tabhi model load karein (Memory bachane ke liye)
+        if session is None:
+            session = new_session("u2netp")
+            
         input_image = await file.read()
-        
-        # Session pass karna zaroori hai taki baar-baar model load na ho
         output_bytes = remove(input_image, session=session)
         
         return Response(content=output_bytes, media_type="image/png")
@@ -36,6 +39,6 @@ async def remove_background(file: UploadFile = File(...)):
         return {"error": str(e)}
 
 if __name__ == "__main__":
-    # Render default port 10000 use karta hai
+    # Port setup for Render
     port = int(os.environ.get("PORT", 10000))
     uvicorn.run(app, host="0.0.0.0", port=port)
