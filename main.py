@@ -29,7 +29,8 @@ async def remove_background(file: UploadFile = File(...)):
     try:
         # Jab pehli image aaye tabhi model load karein (Memory bachane ke liye)
         if session is None:
-            session = new_session("u2netp")
+            # main.py mein ye line check karein
+             session = new_session("u2netp")
             
         input_image = await file.read()
         output_bytes = remove(input_image, session=session)
